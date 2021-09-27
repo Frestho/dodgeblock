@@ -119,10 +119,10 @@ var Player = {
   xVel: 0,
   //horizontal movement speed from key presses
   hMov: 1.25,
-  shieldTimer: 0,
+  shieldTimer: 99990,
   hTimer: 0,
-  vTimer: 0,
-  dTimer: 0,
+  vTimer: 99990,
+  dTimer: 99990,
   powerups: []
 }
 
@@ -381,14 +381,15 @@ function Block(x, y, w, h) {
   this.fixed = false; //3/5/19 update, this should help reduce lag
   this.draw = function() {
     if(this.y+camY < -this.h) {
-      fill(255, 0, 0);
-      noStroke();
-      rect(this.x, -camY, this.w, 5);
+      //fill(255, 0, 0);
+      //noStroke();
+      rect(round(this.x), -camY, this.w, 5);
+    } else {
+    //strokeWeight(round(this.w/30));
+    //stroke(50);
+    //fill(222,184,135);
+    rect(round(this.x), this.y, this.w, this.h);//, this.w/10);
     }
-    strokeWeight(this.w/30);
-    stroke(50);
-    fill(222,184,135);
-    rect(this.x, this.y, this.w, this.h, this.w/20);
   }
   this.update = function() {
     this.originalPos = this.y;
@@ -402,10 +403,12 @@ var Ground = {
   x:-100, y:300, w:1000, h:900
 }
 
-var highest = [];
-for(var i = -100; i < 1001; i++) {
-  highest[i] = 300;
+var classes = [];
+for(var i = 0; i < 600; i++) {
+  classes.push([]);
+  classes[0].push(-100 + i*20); //cleverly using the same loop
 }
+
 //}//the reset function closing brace
 //reset();
 function draw() {
@@ -465,13 +468,15 @@ function draw() {
         }
       }
       background(176, 232, 255);
-      push();
+      //push();
       scale(width/800, height/500);
-      translate(-constrain(Player.x-400, -100, 100), camY);
+      var tX = -constrain(Player.x-400, -100, 100);
+      var tY = camY;
+      translate(tX, tY);
       noStroke();
       rect(Ground.x, Ground.y, Ground.w, Ground.h);
       if((frameCount-frameDiff) % framesPerBlock === 0) {
-        blocks.add(Math.floor(random(-100, 840)), -camY-280+1000/framesPerBlock, 60, 40);
+        blocks.add(Math.floor(random(-100, 840)), -camY-280+round(1000/framesPerBlock), 60, 40);
         switch(floor(random(0, 35))) {
           case 0:
             powerups.push(new shield(Math.floor(random(-100, 840)), -camY-40, 20, 20));
@@ -490,69 +495,41 @@ function draw() {
             break;
         }
       }
-      for(var i = max(blocks.length-300, 0); i < blocks.length; i++) {
+      for(var i = max(blocks.length-200, 0); i < blocks.length; i++) {
         if(!blocks[i].fixed) {
           //console.log(highest[blocks[i].x]);
           blocks[i].update();
-          if(blocks[i].y + blocks[i].h > highest[blocks[i].x] || 
-            blocks[i].y + blocks[i].h > highest[blocks[i].x + blocks[i].w]) {
-            if(highest[blocks[i].x + blocks[i].w] > highest[blocks[i].x]) {
-              blocks[i].y = highest[blocks[i].x] - blocks[i].h;
-            }
-            else {
-              blocks[i].y = highest[blocks[i].x + blocks[i].w] - blocks[i].h;
-            }
+          var c = ceil((300 - blocks[i].y)/blocks[i].h) - 1;
+          if(c == 0) {
+            blocks[i].y = 300 - blocks[i].h*(c+1);
             blocks[i].fixed = true;
             blocks[i].yVel = 0;
-            for(var j = blocks[i].x; j <= blocks[i].x + blocks[i].w; j++) {
-              highest[j] = blocks[i].y;
-            }
-          }
-          /*if(rectrect(blocks[i], Ground)) {
-            blocks[i].yVel = 0;
-            blocks[i].y = Ground.y - blocks[i].h;
-            blocks[i].fixed = true; //fixes the block so that we never need to worry about it moving again (reduces lag)
-          }
-          
-          
-          for(var j = i - 1; j > -1 && j > i - 100; j--) {
-            if(rectrect(blocks[i], blocks[j])) {
-              blocks[i].yVel = 0;
-              blocks[i].y = blocks[j].y - blocks[i].h;
-              /*while(rectrect(blocks[i], blocks[j])) {
-                blocks[i].y-=0.2;
-              }
-              //only fix the block if the one supporting it is also fixed, or else if two blocks collide in the air there can be trouble
-              if(blocks[j].fixed) {
+            classes[c+1].push(i);
+            break;
+          } else {
+            for(var j = 0; j < classes[c].length; j++) {
+              if(rectrect(blocks[i], blocks[classes[c][j]])) {
+                blocks[i].y = 300 - blocks[i].h*(c+1);
                 blocks[i].fixed = true;
+                blocks[i].yVel = 0;
+                classes[c+1].push(i);
+                break;
               }
             }
-          }*/
-          //if(blocks[i].y > 500-camY) {
-            //Ground.y=blocks[i].y-200;
-            //blocks[i].x=23400;
-            //blocks.splice(i, 1);
-            //since all elements in the array after the one being spliced get shifted back an index.
-            //i--;
-          //}
+          }
         }
-        blocks[i].draw();
+        if(blocks[i].y < -camY+500 && 
+           !( blocks[i].fixed && blocks[i].y < -camY - blocks[i].h)
+          && abs(blocks[i].x + blocks[i].w/2 - Player.x - Player.w/2) < 800)
+          blocks[i].draw();
       }
-      var collided = false;
       //wait WHY IS THIS HERE TWICE
       for(i = max(0, blocks.length-300); i < blocks.length; i++) {
         if(rectrect(Player, blocks[i])) {
-          collided = true;
-          /*if(Player.x + Player.w > blocks[i].x && 
-             Player.x + Player.w < blocks[i].x + blocks[i].w) {
-            Player.x = blocks[i].x - Player.w-1;
-            Player.xVel = 0;
-          }*/
+          
           if(Player.y<blocks[i].y) {
             Player.y = blocks[i].y - Player.h;
-            /*while(rectrect(Player, blocks[i])) {//normal jump on top of a block
-              Player.y -= 0.2;
-            }*/
+            
             Player.yVel = 0;
             offGround = 0;
             jumps = 0;
@@ -587,9 +564,6 @@ function draw() {
       Player.updateY();
       if(rectrect(Player, Ground)) {
         Player.y = Ground.y - Player.h;
-        /*while(rectrect(Player, Ground)) {//normal jump on top of a block
-              Player.y -= 0.2;
-            }*/
         Player.yVel = 0;
         offGround = 0;
       }
@@ -597,9 +571,6 @@ function draw() {
         if(rectrect(Player, blocks[i])) {
           if(Player.y<blocks[i].y) {
             Player.y = blocks[i].y - Player.h-0.1;
-            /*while(rectrect(Player, blocks[i])) {//normal jump on top of a block
-              Player.y -= 0.2;
-            }*/
             Player.yVel = 0;
             offGround = 0;
             jumps = 0;
@@ -620,41 +591,18 @@ function draw() {
       }
       Player.draw();
       for(i = 0; i < powerups.length; i++) {
-        if(!powerups[i].fixed) {
-          powerups[i].yVel+=gravity;
-          powerups[i].y += powerups[i].yVel;
-          //checks collision with ground
-          if(rectrect(powerups[i], Ground)) {
-              powerups[i].yVel = 0;
-              powerups[i].y = Ground.y - powerups[i].h;
-              /*while(rectrect(powerups[i], Ground)) {
-                powerups[i].y-=0.2;
-
-              }*/
-            }
-          //checks collision with blocks
-          if(powerups[i].y + powerups[i].h > highest[powerups[i].x] || 
-              powerups[i].y + powerups[i].h > highest[powerups[i].x + powerups[i].w]) {
-              if(highest[powerups[i].x + powerups[i].w] > highest[powerups[i].x]) {
-                powerups[i].y = highest[powerups[i].x] - powerups[i].h;
-              }
-              else {
-                powerups[i].y = highest[powerups[i].x + powerups[i].w] - powerups[i].h;
-              }
-              powerups[i].fixed = true;
-             powerups[i].yVel = 0;
-
-            }
-          /*for(j = 0; j < blocks.length; j++) {
-            if(rectrect(powerups[i], blocks[j])) {
-              powerups[i].yVel = 0;
-              powerups[i].y = blocks[j].y - powerups[i].h;
-              /*while(rectrect(powerups[i], blocks[j])) {
-                powerups[i].y-=0.2;
-
-              }
-            }
-          }*/
+        powerups[i].yVel+=gravity;
+        powerups[i].y += powerups[i].yVel;
+        //checks collision with ground
+        if(rectrect(powerups[i], Ground)) {
+          powerups[i].yVel = 0;
+          powerups[i].y = Ground.y - powerups[i].h;
+        }
+        for(j = 0; j < blocks.length; j++) {
+          if(rectrect(powerups[i], blocks[j])) {
+            powerups[i].yVel = 0;
+            powerups[i].y = blocks[j].y - powerups[i].h;
+          }
         }
         //makes the flashy effect when the powerup is about to disappear
         if(powerups[i].timer < 240 || frameCount % 16 < 8) {
@@ -700,10 +648,9 @@ function draw() {
       }
       offGround++;
       timeSinceJump++;
-      pop();
+      //pop();
       //camY+=Math.sqrt(1.15*Math.sqrt(frameCount/10000+1))-1;
       camY += 2/framesPerBlock;
-console.log(Player.x);
       //checks if the player is really high in the frame
       if(Player.y+camY < 150) {
         //makes it so that the camY can never go down
@@ -717,6 +664,7 @@ console.log(Player.x);
       if(Player.y> -camY + 500) {
         scene = "DEAD";
       }
+      translate(-tX, -tY);
       //powerup indicators (at top left)
       if(Player.shieldTimer > 120 || Player.shieldTimer > 0 && Player.shieldTimer < 120 && frameCount % 16 < 8) {
         displayShield.draw();
@@ -734,10 +682,10 @@ console.log(Player.x);
       fill(0);
       textAlign(RIGHT, CENTER);
       // textSize(25) on a "normal" sized canvas
-      textSize(width/32);
-      text("Score: " + score, width*0.99, height/30);
-      text("Frames Per Block: " + framesPerBlock, width*0.99, height/12);
-      text("FPS: "+ round(frameRate()), width * 0.99, height/7);
+      textSize(25);
+      text("Score: " + score, 790, 13);
+      text("Frames Per Block: " + framesPerBlock, 790, 40);
+      text("FPS: "+ round(frameRate()), 790, 67);
       textAlign(CENTER, CENTER);
       break;
     case "DEAD":
@@ -766,9 +714,10 @@ console.log(Player.x);
         offGround = 10;
         timeSinceJump = 0;
         jumps = 0;
-        
-        for(var i = -100; i < 1001; i++) {
-          highest[i] = 300;
+        classes = [];
+        for(var i = 0; i < 600; i++) {
+          classes.push([]);
+          classes[0].push(-100 + i*20); //cleverly using the same loop
         }
         
         frameDiff = frameCount;
