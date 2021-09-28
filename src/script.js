@@ -461,7 +461,7 @@ function Block(x, y, w, h) {
       //fill(255, 0, 0);
       ctx.fillStyle = "rgb(255, 0, 0, 0.5)";
       //noStroke();
-      ctx.fillRect(this.x, -camY, this.w, 5);
+      ctx.fillRect(this.x, -camY, this.w, 10);
     } else {
     strokeWeight(this.w/30);
     stroke(50, 50, 50);
