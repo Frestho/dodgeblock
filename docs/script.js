@@ -442,7 +442,7 @@ function coin(x, y, w, h) {
     stroke(186, 159, 0);
     fill(255, 215, 0);
     ctx.ellipse(this.x+this.w/2, this.y+this.h/2, this.w, this.h, 0, 0, 2*Math.PI);
-    textSize(this.w/3);
+    textSize(this.w/2);
     fill(0, 0, 0);
     noStroke();
     ctx.textBaseline = "middle";
@@ -465,12 +465,12 @@ function Block(x, y, w, h) {
       //fill(255, 0, 0);
       ctx.fillStyle = "rgb(255, 0, 0, 0.5)";
       //noStroke();
-      ctx.fillRect(round(this.x), -camY, this.w, 5);
+      ctx.fillRect(this.x, -camY, this.w, 5);
     } else {
-    strokeWeight(round(this.w/30));
+    strokeWeight(this.w/30);
     stroke(50, 50, 50);
     fill(222,184,135);
-    roundRect(round(this.x), this.y, this.w, this.h, this.w/10);
+    roundRect(this.x, this.y, this.w, this.h, this.w/10);
     }
   }
   this.update = function() {
@@ -563,7 +563,11 @@ function draw() {
       text("Click to start", 400, 200);
       textSize(40);
       text("Arrow keys or WASD to move.\nAvoid falling blocks and don't get trapped.", 400, 400)
-      */if(mouseIsPressed) {
+      */
+      ctx.textAlign = "center";
+      textSize(30);
+      text("Click to start (Too lazy to convert the old title screen)", 400, 250);
+      if(mouseIsPressed) {
         frameDiff = frameCount;
         scene = "GAME";
       }
@@ -626,7 +630,7 @@ function draw() {
             break;
         }
       }
-      for(var i = max(blocks.length-200, 0); i < blocks.length; i++) {
+      for(var i = max(blocks.length-300, 0); i < blocks.length; i++) {
         if(!blocks[i].fixed) {
           //console.log(highest[blocks[i].x]);
           blocks[i].update();
@@ -641,9 +645,11 @@ function draw() {
             for(var j = 0; j < classes[c].length; j++) {
               if(rectrect(blocks[i], blocks[classes[c][j]])) {
                 blocks[i].y = 300 - blocks[i].h*(c+1);
-                blocks[i].fixed = true;
                 blocks[i].yVel = 0;
-                classes[c+1].push(i);
+                if(blocks[classes[c][j]].fixed) {
+                  blocks[i].fixed = true;
+                  classes[c+1].push(i);
+                }
                 break;
               }
             }
