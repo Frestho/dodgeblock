@@ -22,77 +22,16 @@ Big update!
 Silly me, my lag reduction code had an extra curly brace somewhere which made it do almost nothing. I was wondering why it was still pretty laggy. Anyways, there should be much less lag now!
 Also, I made powerups twice as common. Have fun!
 */
-var canvas = document.getElementById('tutorial');
-canvas.width = canvas.offsetWidth;
-	canvas.height = canvas.offsetHeight;
-if (canvas.getContext) {
-  var ctx = canvas.getContext('2d');
-}
 function setup() {
   //16:10 = MASTERRACE
   //if the user's screen has more width for 16:10 than height, put bars on the side, otherwise put it at the top
-	/* Begin size adjusting. */
-  
-  window.requestAnimationFrame(draw);
-}
-
-function textSize(a) {
-  ctx.font = `${a}px Serif`;
-}
-function strokeWeight(a) {
-  ctx.lineWidth = a;
-}
-var strokeState = true;
-function stroke(a) {
-  strokeState = true;
-  ctx.strokeStyle = `rgb(${a}, ${a}, ${a})`;
-}
-function stroke(a, b, c) {
-  strokeState = true;
-  ctx.strokeStyle = `rgb(${a}, ${b}, ${c})`;
-}
-var fillState = true;
-function fill(a) {
-  fillState = true;
-  ctx.fillStyle = `rgb(${a}, ${a}, ${a})`;
-}
-function fill(a, b, c) {
-  fillState = true;
-  ctx.fillStyle = `rgb(${a}, ${b}, ${c})`;
-}
-function noFill() {
-  fillState = false;
-}
-function noStroke() {
-  strokeState = false;
-}
-function rect(a, b, c, d) {
-  if(fillState)
-    ctx.fillRect(a, b, c, d);
-  if(strokeState)
-    ctx.strokeRect(a, b, c, d);
-}
-function roundRect(x, y, w, h, radius) {
-  var r = x + w;
-  var b = y + h;
-  ctx.beginPath();
-  ctx.moveTo(x+radius, y);
-  ctx.lineTo(r-radius, y);
-  ctx.quadraticCurveTo(r, y, r, y+radius);
-  ctx.lineTo(r, y+h-radius);
-  ctx.quadraticCurveTo(r, b, r-radius, b);
-  ctx.lineTo(x+radius, b);
-  ctx.quadraticCurveTo(x, b, x, b-radius);
-  ctx.lineTo(x, y+radius);
-  ctx.quadraticCurveTo(x, y, x+radius, y);
-  //ctx.closePath(); 
-  if(fillState)
-    ctx.fill();
-  if(strokeState)
-    ctx.stroke();
-}
-function text(a, b, c) {
-  ctx.fillText(a, b, c);
+  if(windowWidth*5/8 > windowHeight) {
+  createCanvas(windowHeight*8/5, windowHeight);
+  } else{
+    createCanvas(windowWidth, windowWidth*5/8);
+  }
+  textAlign(CENTER, CENTER);
+  frameRate(60);
 }
 
 //tweak for fun i guess
@@ -121,7 +60,7 @@ function rectrect(rect1, rect2) {
              ((rect2.y <= rect1.y) && (rect1.y <= rect2.y + rect2.h)) );
 }
 
-/*function windowResized() {
+function windowResized() {
   //if(scene = "DEAD") {
     //return;
  // }
@@ -131,35 +70,36 @@ function rectrect(rect1, rect2) {
   } else{
     resizeCanvas(windowWidth, windowWidth*5/8);
   }
-}*/
+}
 
 function gameOver() {
   scene = "DEAD";
-  //scale(width / 800, height / 500);
+  pop();
+  scale(width / 800, height / 500);
   noStroke();
-  //background(220);
-  fill(0, 0, 0);
-  ctx.textAlign = "center";
+  background(220);
+  fill(0);
+  textAlign(CENTER, CENTER);
   textSize(60);
-  //textStyle(BOLD);
+  textStyle(BOLD);
   text("Game Statistics:", 400, 50);
-  ctx.textAlign = "left";
+  textAlign(LEFT, BOTTOM);
   textSize(40);
   text("Extras:", 600, 160);
-  //textStyle(NORMAL);
+  textStyle(NORMAL);
   text("FPB: " + framesPerBlock, 550, 210);
-  //text("Canvas Size:", 550, 300);
-  //text(round(width) + " x " + round(height), 550, 350);
+  text("Canvas Size:", 550, 300);
+  text(round(width) + " x " + round(height), 550, 350);
   text("Height reached: " + round(camY) + " cm", 60, 160);
   text("Total blocks: " + blocks.length, 60, 210);
   text("+ Coins collected: " + scoreCoins / 200 + "  x200", 30, 260);
   text("_____________________", 20, 280);
   textSize(60);
   text("Total Score: " + score, 20, 360);
-  ctx.textAlign = "center";
+  textAlign(CENTER, CENTER);
   textSize(50);
   text("Click or press r to play again.", 400, 450);
-  //textStyle(NORMAL);
+  textStyle(NORMAL);
 }
 
 var keys = [];
@@ -180,9 +120,9 @@ var Player = {
   //horizontal movement speed from key presses
   hMov: 1.25,
   shieldTimer: 0,
-  hTimer: 0,
-  vTimer: 0,
-  dTimer: 0,
+  hTimer: -999990,
+  vTimer: -99990,
+  dTimer: -99990,
   powerups: []
 }
 
@@ -226,14 +166,26 @@ Player.walkedInPlatform = function() {
 //updates the position of the player based on current speeds
 Player.updateX = function() {
   this.originalPos = this.x;
-  this.xVel *= 0.8;
+  //if(abs(this.xVel) > 7.5) {
+    //this.xVel -= this.xVel/abs(this.xVel)*1.5;
+  //} else {
+    this.xVel *= 0.8;
+  //}
+  /*if(this.xVel > 1) {
+    this.xVel -= 1;
+  } else if (this.xVel < -1) {
+    this.xVel += 1;
+  } else {
+    this.xVel = 0;
+  }*/
+  
   this.x += this.xVel;
   this.x = constrain(this.x, -100, 900-this.w)
 }
 Player.updateY = function() {
   this.originalPos = Player.y;
   //it's weird cuz positive y is downwards...
-  if(this.yVel < 4 || keys[38] || keys[87]) {//to make higher jumps the longer the up arrow is pressed
+  if(this.yVel < 4 || keys[UP_ARROW] || keys[87]) {//to make higher jumps the longer the up arrow is pressed
     this.yVel -= gravity;
   } else {
     this.yVel -= gravity * 2;
@@ -242,16 +194,10 @@ Player.updateY = function() {
   this.y -= this.yVel;
 }
 Player.draw = function() {
-  //ctx.fillRect(this.x, this.y, this.w, this.h);
   noStroke();
-  //strokeWeight(round(this.w/30));
-    //stroke(50, 50, 50);
-    fill(222,184,135);
   fill(255, 0, 0);
-  ctx.fillStyle = "rgb(255, 0, 0)";
-  roundRect(this.x, this.y, this.w, this.h, this.w/5);
-  //rect(this.x, this.y, this.w, this.h, this.w / 5);
-  fill(0, 0, 0);
+  rect(this.x, this.y, this.w, this.h, this.w / 10);
+  fill(0);
   
   //jump costumes
   if(this.yVel > 0.5) {
@@ -336,11 +282,10 @@ Player.draw = function() {
   }
   if(this.shieldTimer > 0) {
     //shield ellipse
+    noFill();
     strokeWeight(this.w/15);
     stroke(27, 209, 130);
-    ctx.beginPath();
-    ctx.ellipse(this.x + this.w / 2, this.y + this.h / 2, this.w*1.414/2, this.h*1.414/2, 0, 0, 2*Math.PI);
-    ctx.stroke();
+    ellipse(this.x + this.w / 2, this.y + this.h / 2, this.w*1.414, this.h*1.414);
   }
 }
 
@@ -354,11 +299,9 @@ function shield(x, y, w, h) {
   this.yVel = 0;
   this.timer = 0;
   this.draw = function() {
-    strokeWeight(this.w/10);
     stroke(27, 209, 130);
-    ctx.beginPath();
-    ctx.ellipse(this.x+this.w/2, this.y+this.h/2, this.w/2, this.w/2, 0, 0, 2*Math.PI);
-    ctx.stroke();
+    noFill();
+    ellipse(this.x+this.w/2, this.y+this.h/2, this.w, this.h);
   }
 }
 function hSpeed(x, y, w, h) {
@@ -371,16 +314,13 @@ function hSpeed(x, y, w, h) {
   this.yVel = 0;
   this.timer = 0;
   this.draw = function() {
-    textSize(this.w);
+    textSize(this.w/2);
     strokeWeight(this.w/10);
-    stroke(0, 0, 0);
+    stroke(0);
     fill(163, 209, 27);
     rect(this.x, this.y, this.w, this.h);
-    fill(0, 0, 0);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("<->", this.x+this.w/2, this.y+this.h/2);
-    ctx.textBaseline = "alphabetic";
+    fill(0);
+    text("<->", this.x+this.w/2, this.y+this.h/2);
   }
 }
 function dJump(x, y, w, h) {
@@ -393,19 +333,15 @@ function dJump(x, y, w, h) {
   this.yVel = 0;
   this.timer = 0;
   this.draw = function() {
-    textSize(this.w);
+    textSize(this.w/2);
     strokeWeight(this.w/10);
-    stroke(0, 0, 0);
+    stroke(0);
     fill(163, 209, 27);
     rect(this.x, this.y, this.w, this.h);
-    fill(0, 0, 0);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("↑↑", this.x+this.w/2, this.y+this.h/2);
-    ctx.textBaseline = "alphabetic";
+    fill(0);
+    text("↑↑", this.x+this.w/2, this.y+this.h/2);
   }
 }
-
 function vSpeed(x, y, w, h) {
   this.type = "V";
   this.x = x;
@@ -418,14 +354,11 @@ function vSpeed(x, y, w, h) {
   this.draw = function() {
     textSize(this.w);
     strokeWeight(this.w/10);
-    stroke(0, 0, 0);
+    stroke(0);
     fill(163, 209, 27);
     rect(this.x, this.y, this.w, this.h);
-    fill(0, 0, 0);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("↕", this.x+this.w/2, this.y+this.h/2);
-    ctx.textBaseline = "alphabetic";
+    fill(0);
+    text("↕", this.x+this.w/2, this.y+this.h/2);
   }
 }
 function coin(x, y, w, h) {
@@ -441,13 +374,11 @@ function coin(x, y, w, h) {
     strokeWeight(this.w/10);
     stroke(186, 159, 0);
     fill(255, 215, 0);
-    ctx.ellipse(this.x+this.w/2, this.y+this.h/2, this.w, this.h, 0, 0, 2*Math.PI);
-    textSize(this.w/2);
-    fill(0, 0, 0);
+    ellipse(this.x+this.w/2, this.y+this.h/2, this.w, this.h);
+    textSize(this.w/3);
+    fill(0);
     noStroke();
-    ctx.textBaseline = "middle";
-    ctx.fillText("+200", this.x + this.w/2, this.y + this.h / 2);
-    ctx.textBaseline = "alphabetic";
+    text("+200", this.x + this.w/2, this.y + this.h / 2)
   }
 }
 var powerups = [];
@@ -462,15 +393,14 @@ function Block(x, y, w, h) {
   this.fixed = false; //3/5/19 update, this should help reduce lag
   this.draw = function() {
     if(this.y+camY < -this.h) {
-      //fill(255, 0, 0);
-      ctx.fillStyle = "rgb(255, 0, 0, 0.5)";
-      //noStroke();
-      ctx.fillRect(this.x, -camY, this.w, 10);
+      fill(255, 0, 0);
+      noStroke();
+      rect(round(this.x), -camY, this.w, 5);
     } else {
-    strokeWeight(this.w/30);
-    stroke(50, 50, 50);
+    strokeWeight(round(this.w/30));
+    stroke(50);
     fill(222,184,135);
-    roundRect(this.x, this.y, this.w, this.h, this.w/10);
+    rect(round(this.x), this.y, this.w, this.h, this.w/10);
     }
   }
   this.update = function() {
@@ -490,60 +420,15 @@ for(var i = 0; i < 600; i++) {
   classes.push([]);
   classes[0].push(-100 + i*20); //cleverly using the same loop
 }
-var frameCount = 0;
-var mouseIsPressed = false;
 
-canvas.addEventListener("mousedown", function(e){
-  mouseIsPressed = true;
-});
-canvas.addEventListener("mouseup", function(e){
-  mouseIsPressed = false;
-});
+var pwrCounter = 0;
 
-window.addEventListener('keydown',this.check1,false);
-window.addEventListener('keyup',this.check2,false);
-
-function check1(e) {
-    keys[e.keyCode] = true;
-}
-function check2(e) {
-    keys[e.keyCode] = false;
-}
-
-function constrain(a, b, c) {
-  if(b > a) return b;
-  if(c < a) return c;
-  return a;
-}
-function max(a, b) {
-  return Math.max(a, b);
-}
-
-function round(a) {
-  return Math.floor(a+0.5);
-}
-
-function random(a, b) {
-  return Math.random() * (b-a) + a;
-}
-
-function floor(a) {
-  return Math.floor(a);
-}
-
-function ceil(a) {
-  return Math.ceil(a);
-}
-function abs(a) {
-  return Math.abs(a);
-}
 //}//the reset function closing brace
 //reset();
 function draw() {
-  frameCount++;
   switch(scene) {
     case "MENU":
-      /*scale(width/800, height/500);
+      scale(width/800, height/500);
       background(215, 236, 250);
       fill(222,184,135);
       stroke(50);
@@ -563,74 +448,71 @@ function draw() {
       text("Click to start", 400, 200);
       textSize(40);
       text("Arrow keys or WASD to move.\nAvoid falling blocks and don't get trapped.", 400, 400)
-      */
-      ctx.textAlign = "center";
-      textSize(30);
-      text("Click to start (Too lazy to convert the old title screen)", 400, 250);
       if(mouseIsPressed) {
         frameDiff = frameCount;
         scene = "GAME";
       }
       break;
     case "GAME":
-      displayShield = new shield(0.2*30, 40, 25, 25);
-      displayH = new hSpeed(1.2*30, 40, 25, 25);
-      displayD = new dJump(2.2*30, 40, 25, 25);
-      displayV = new vSpeed(3.2*30, 40, 25, 25);
+      displayShield = new shield(0.2*width/30, height/40, width/40, height/25);
+      displayH = new hSpeed(1.2*width/30, height/40, width/40, height/25);
+      displayD = new dJump(2.2*width/30, height/40, width/40, height/25);
+      displayV = new vSpeed(3.2*width/30, height/40, width/40, height/25);
       framesPerBlock = round(12000000/((frameCount-frameDiff)*350+100000));
+      
+      //initially 2 and 1.25
       if(Player.hTimer > 0) {
-        Player.hMov = 2;
+        Player.hMov = 1.8;
       } else {
-        Player.hMov = 1.25;
+        Player.hMov = 1.15;
       }
       jKeyLetGo++;
-      if(keys[38] || keys[87]) {
+      if(keys[UP_ARROW] || keys[87]) {
         Player.jump();
       } else {
         jKeyLetGo = 0;
       }
-      if(keys[37] || keys[65]) {
+      if(keys[LEFT_ARROW] || keys[65]) {
         Player.walk(-Player.hMov);
       }
-      if(keys[39] || keys[68]) {
+      if(keys[RIGHT_ARROW] || keys[68]) {
         Player.walk(Player.hMov);
       }
-      if(keys[40] || keys[83]) {
+      if(keys[DOWN_ARROW] || keys[83]) {
         if(Player.vTimer > 0) {
           Player.yVel -= 0.6;
         }
       }
-      ctx.fillStyle = "rgb(176, 232, 255)";
-      ctx.fillRect(0, 0, 800, 500);//background(176, 232, 255);
+      background(176, 232, 255);
       //push();
-      //scale(width/800, height/500);
+      scale(width/800, height/500);
       var tX = -constrain(Player.x-400, -100, 100);
       var tY = camY;
-      ctx.translate(tX, tY);
-      //noStroke();
-      ctx.fillStyle = 'black';
-      ctx.fillRect(Ground.x, Ground.y, Ground.w, Ground.h);
+      translate(tX, tY);
+      noStroke();
+      rect(Ground.x, Ground.y, Ground.w, Ground.h);
       if((frameCount-frameDiff) % framesPerBlock === 0) {
         blocks.add(Math.floor(random(-100, 840)), -camY-280+round(1000/framesPerBlock), 60, 40);
-        switch(floor(random(0, 35))) {
-          case 0:
+        switch(pwrCounter % 35) {
+          case 6:
             powerups.push(new shield(Math.floor(random(-100, 840)), -camY-40, 20, 20));
             break;
-          case 1:
+          case 13:
             powerups.push(new hSpeed(Math.floor(random(-100, 840)), -camY-40, 20, 20));
             break;
-          case 2:
+          case 20:
             powerups.push(new dJump(Math.floor(random(-100, 840)), -camY-40, 20, 20));
             break;
-          case 3:
+          case 27:
             powerups.push(new vSpeed(Math.floor(random(-100, 840)), -camY-40, 20, 20));
             break;
-          case 4:
+          case 34:
             powerups.push(new coin(Math.floor(random(-100, 840)), -camY-40, 20, 20));
             break;
         }
+        pwrCounter++;
       }
-      for(var i = max(blocks.length-300, 0); i < blocks.length; i++) {
+      for(var i = max(blocks.length-200, 0); i < blocks.length; i++) {
         if(!blocks[i].fixed) {
           //console.log(highest[blocks[i].x]);
           blocks[i].update();
@@ -645,11 +527,9 @@ function draw() {
             for(var j = 0; j < classes[c].length; j++) {
               if(rectrect(blocks[i], blocks[classes[c][j]])) {
                 blocks[i].y = 300 - blocks[i].h*(c+1);
+                blocks[i].fixed = true;
                 blocks[i].yVel = 0;
-                if(blocks[classes[c][j]].fixed) {
-                  blocks[i].fixed = true;
-                  classes[c+1].push(i);
-                }
+                classes[c+1].push(i);
                 break;
               }
             }
@@ -694,8 +574,18 @@ function draw() {
       Player.updateX();
       for(i = max(0, blocks.length-300); i < blocks.length; i++) {
         if(rectrect(Player, blocks[i])) {
-          Player.x = Player.originalPos;
           Player.xVel = 0;
+          if(keys[UP_ARROW]) {
+            if(Player.x < Player.originalPos) {
+              Player.xVel = 11;
+              Player.yVel = 8;
+            } else {
+              Player.xVel = -11;
+              Player.yVel = 8;
+            }
+          }
+          Player.x = Player.originalPos;
+          
         }
       }
       Player.updateY();
@@ -801,7 +691,7 @@ function draw() {
       if(Player.y> -camY + 500) {
         scene = "DEAD";
       }
-      ctx.translate(-tX, -tY);
+      translate(-tX, -tY);
       //powerup indicators (at top left)
       if(Player.shieldTimer > 120 || Player.shieldTimer > 0 && Player.shieldTimer < 120 && frameCount % 16 < 8) {
         displayShield.draw();
@@ -815,18 +705,21 @@ function draw() {
       if(Player.vTimer > 120 || Player.vTimer > 0 && Player.vTimer < 120 && frameCount % 16 < 8) {
         displayV.draw();
       }
-      //noStroke();
-      fill(0, 0, 0);
-      ctx.textAlign = "right";
+      noStroke();
+      fill(0);
+      textAlign(RIGHT, CENTER);
       // textSize(25) on a "normal" sized canvas
       textSize(25);
-      text("Score: " + score, 790, 30);
-      text("Frames Per Block: " + framesPerBlock, 790, 60);
-      //text("FPS: "+ round(frameRate()), 790, 67);
+      text("Score: " + score, 790, 13);
+      text("Frames Per Block: " + framesPerBlock, 790, 40);
+      text("FPS: "+ round(frameRate()), 790, 67);
+      textAlign(CENTER, CENTER);
       break;
     case "DEAD":
       gameOver();
       if(mouseIsPressed || keys[82]) {
+        textAlign(CENTER, CENTER);
+        rectMode(CORNER);
         blocks = [];
         blocks.add = function(x, y, w, h) {blocks.push(new Block(x, y, w, h))};
         powerups = [];
@@ -842,6 +735,7 @@ function draw() {
         Player.vTimer = 0;
         Player.hTimer = 0;
         Player.dTimer = 0;
+        pwrCounter = 0;
         
         camY = 0;
         scoreCoins = 0;
@@ -858,5 +752,4 @@ function draw() {
         scene = "GAME";
       }
   }
-  window.requestAnimationFrame(draw);
 }
