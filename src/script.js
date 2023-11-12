@@ -1,26 +1,5 @@
 /*
-Made 2/28/18
-Project abandoned on 3/3/18
-Camed back to this on 3/9/18
-Abandoned sometime later, and made some big updates on 3/5/19 (almost exactly one year later)
-
-(Old) TODO:
-Add powerup "notices" (don't know what it's called)? Like icons at the top left of the screen that represent the powerups that the player currently has. Less opacity for icons that are closer to being gone.
-3/5/2019 update: Finally added, lol! I used a flashing-when-it's-about-to-disappear way instead, though the opacity idea I suggested 10 months ago seems interesting. Too late :(
-
-TODO: 
-Add a suicide option
-Make it so that you can press also press a key to restart instead of having to touch your mouse
-
-Changelog:
-3/5/19 - 0.1.a --> 1.0.0
-Big update!
-- Added powerup status indicators in the top left. If it is flashing, it is about to run out.
-- Added a block "fixed" status in order to reduce lag!
-
-3/6/19 - 1.0.0 --> 1.0.1
-Silly me, my lag reduction code had an extra curly brace somewhere which made it do almost nothing. I was wondering why it was still pretty laggy. Anyways, there should be much less lag now!
-Also, I made powerups twice as common. Have fun!
+See readme for tips and info!
 */
 function setup() {
   //16:10 = MASTERRACE
@@ -574,7 +553,7 @@ function draw() {
       Player.updateX();
       for(i = max(0, blocks.length-300); i < blocks.length; i++) {
         if(rectrect(Player, blocks[i])) {
-          Player.xVel = 0;
+          Player.xVel = 0;/* uncomment for wall jump version
           if(keys[UP_ARROW]) {
             if(Player.x < Player.originalPos) {
               Player.xVel = 11;
@@ -583,7 +562,7 @@ function draw() {
               Player.xVel = -11;
               Player.yVel = 8;
             }
-          }
+          }*/
           Player.x = Player.originalPos;
           
         }
