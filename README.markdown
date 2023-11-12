@@ -1,7 +1,5 @@
 # DodgeBlock - Game
 
-A Pen created on CodePen.io. Original URL: [https://codepen.io/Extensive/pen/yLXRPax](https://codepen.io/Extensive/pen/yLXRPax).
-
 Arrow keys or WASD to move. Avoid the falling blocks and avoid getting trapped.
 Powerups:
 <-> = faster horizontal movement
